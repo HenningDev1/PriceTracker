@@ -1,0 +1,76 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PriceTrackerSetup.SetupApp"
+             RequestedThemeVariant="Default">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="Bg" Color="#F5F5F7" />
+          <SolidColorBrush x:Key="Card" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="Border" Color="#E2E2E7" />
+          <SolidColorBrush x:Key="Text" Color="#1D1D1F" />
+          <SolidColorBrush x:Key="Sub" Color="#6E6E73" />
+          <SolidColorBrush x:Key="Chip" Color="#E8E8ED" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="Bg" Color="#1C1C1E" />
+          <SolidColorBrush x:Key="Card" Color="#2A2A2D" />
+          <SolidColorBrush x:Key="Border" Color="#38383B" />
+          <SolidColorBrush x:Key="Text" Color="#F5F5F7" />
+          <SolidColorBrush x:Key="Sub" Color="#A1A1A6" />
+          <SolidColorBrush x:Key="Chip" Color="#3A3A3D" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <Color x:Key="SystemAccentColor">#10B981</Color>
+      <Color x:Key="SystemAccentColorDark1">#0E9F70</Color>
+      <Color x:Key="SystemAccentColorLight1">#34D399</Color>
+      <SolidColorBrush x:Key="Accent" Color="#10B981" />
+      <SolidColorBrush x:Key="Danger" Color="#E5484D" />
+    </ResourceDictionary>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+    <Style Selector="Window">
+      <Setter Property="FontFamily" Value="fonts:Inter#Inter" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    </Style>
+    <Style Selector="TextBlock.sub">
+      <Setter Property="Foreground" Value="{DynamicResource Sub}" />
+    </Style>
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="18,8" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Background" Value="{DynamicResource Chip}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Accent}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Opacity" Value="0.88" />
+    </Style>
+    <Style Selector="Button.danger">
+      <Setter Property="Background" Value="{DynamicResource Danger}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Danger}" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Opacity" Value="0.88" />
+    </Style>
+    <Style Selector="Ellipse.light">
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="StrokeThickness" Value="0.5" />
+      <Setter Property="Stroke" Value="#26000000" />
+    </Style>
+  </Application.Styles>
+</Application>

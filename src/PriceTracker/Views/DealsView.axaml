@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PriceTracker.ViewModels"
+             xmlns:c="using:PriceTracker.Controls"
+             x:Class="PriceTracker.Views.DealsView"
+             x:DataType="vm:DealsPageViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="28,26,28,0">
+
+    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+      <StackPanel VerticalAlignment="Bottom">
+        <TextBlock Text="Deals" Classes="h1" />
+        <TextBlock Text="{Binding Subtitle}" Classes="sub" Margin="0,2,0,0" />
+      </StackPanel>
+      <Border Grid.Column="1" Background="{DynamicResource ChipBg}" CornerRadius="9" Padding="3" VerticalAlignment="Bottom">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <RadioButton Classes="seg" GroupName="dealfilter" Content="All"
+                       IsChecked="{Binding Filter, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=All}" />
+          <RadioButton Classes="seg" GroupName="dealfilter" Content="Games"
+                       IsChecked="{Binding Filter, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=Games}" />
+          <RadioButton Classes="seg" GroupName="dealfilter" Content="Items"
+                       IsChecked="{Binding Filter, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=Items}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="1" Background="{DynamicResource AccentSoftBrush}" CornerRadius="12" Padding="14,10" Margin="0,0,0,16">
+      <Grid ColumnDefinitions="Auto,*">
+        <Path Data="M12 3c.5 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2.2 1-3.6 2.2-4.8.2 1.7 1 2.8 2.3 3.3C11 9.5 11 6 12 3Z"
+              Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform"
+              VerticalAlignment="Top" Margin="0,2,12,0" />
+        <StackPanel Grid.Column="1" Spacing="2">
+          <TextBlock Text="What counts as a deal" FontWeight="SemiBold" Classes="small" />
+          <TextBlock Text="{Binding RulesText}" Classes="sub xs" TextWrapping="Wrap" LineHeight="17" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="2" Classes="card" IsVisible="{Binding IsEmpty}" VerticalAlignment="Top" Padding="40">
+      <StackPanel HorizontalAlignment="Center" Spacing="8" MaxWidth="420">
+        <TextBlock Text="No deals right now" Classes="h2" HorizontalAlignment="Center" />
+        <TextBlock Classes="sub" TextWrapping="Wrap" TextAlignment="Center"
+                   Text="Games and items show up here as soon as they get unusually cheap. Price history builds up with every refresh, so deal detection gets better over time." />
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl ItemsSource="{Binding Deals}" Margin="0,0,0,24">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="vm:DealViewModel">
+            <Border Classes="card" Width="286" Margin="0,0,14,14" ClipToBounds="True" Padding="0">
+              <Grid RowDefinitions="140,*">
+                <Panel Background="{DynamicResource ChipBg}">
+                  <Image Source="{Binding Image}" Stretch="UniformToFill" IsVisible="{Binding Wide}" />
+                  <Border Background="White" IsVisible="{Binding !Wide}">
+                    <Image Source="{Binding Image}" Stretch="Uniform" Margin="14" />
+                  </Border>
+                  <Border Classes="pill deal" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <TextBlock Text="{Binding Badge}" />
+                  </Border>
+                  <Border Classes="pill" Background="#99000000" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <TextBlock Text="{Binding Kind}" Foreground="White" />
+                  </Border>
+                </Panel>
+                <StackPanel Grid.Row="1" Margin="14,12,14,14" Spacing="8">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" FontSize="{DynamicResource FontL}" />
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding PriceText}" Classes="price h2" Foreground="{DynamicResource DealBrush}" />
+                    <TextBlock Text="{Binding OldPriceText}" Classes="strike small" VerticalAlignment="Bottom" Margin="0,0,0,3"
+                               IsVisible="{Binding HasOldPrice}" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Reason}" Classes="sub xs" TextWrapping="Wrap" MinHeight="30" />
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Classes="accent" Command="{Binding OpenPrimaryCommand}" FontSize="{DynamicResource FontS}">
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Text="{Binding PrimaryLabel}" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />
+                        <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="link" Command="{Binding OpenSecondaryCommand}" IsVisible="{Binding HasSecondary}" Content="{Binding SecondaryLabel}" />
+                  </StackPanel>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

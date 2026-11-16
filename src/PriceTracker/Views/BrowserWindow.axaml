@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PriceTracker.Views.BrowserWindow"
+        Title="Price Tracker – browser check"
+        Icon="/Assets/app.ico"
+        Width="980" Height="720"
+        ShowInTaskbar="True"
+        Background="{DynamicResource WindowBg}"
+        WindowStartupLocation="CenterScreen">
+  <DockPanel>
+    <Border Name="Header" DockPanel.Dock="Top" Height="64" Background="{DynamicResource SidebarBg}"
+            BorderBrush="{DynamicResource Separator}" BorderThickness="0,0,0,1" Padding="20,0">
+      <Grid ColumnDefinitions="Auto,*">
+        <Image Source="/Assets/app-256.png" Width="30" Height="30" />
+        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+          <TextBlock Name="HeadLine" Text="Please confirm you're human" FontWeight="SemiBold" />
+          <TextBlock Text="The site wants a quick check before showing prices. Complete it below – this window closes by itself afterwards."
+                     Classes="sub xs" TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Panel Name="Host" />
+  </DockPanel>
+</Window>

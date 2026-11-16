@@ -1,0 +1,223 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PriceTracker.ViewModels"
+             xmlns:c="using:PriceTracker.Controls"
+             x:Class="PriceTracker.Views.ItemsView"
+             x:DataType="vm:ItemsPageViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*" Margin="28,26,28,0">
+
+    <!-- Header -->
+    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+      <StackPanel VerticalAlignment="Bottom">
+        <TextBlock Text="Wishlist" Classes="h1" />
+        <TextBlock Text="{Binding Subtitle}" Classes="sub" Margin="0,2,0,0" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <TextBox Text="{Binding SearchText}" Watermark="Search Geizhals – e.g. RTX 5070, iPhone 16…" Width="320">
+          <TextBox.InnerLeftContent>
+            <Path Data="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z M20 20l-4-4" Stroke="{DynamicResource TextTertiary}"
+                  StrokeThickness="1.8" StrokeLineCap="Round" Width="13" Height="13" Stretch="Uniform" Margin="10,0,0,0" />
+          </TextBox.InnerLeftContent>
+          <TextBox.KeyBindings>
+            <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+          </TextBox.KeyBindings>
+        </TextBox>
+        <Button Classes="accent" Content="Search" Command="{Binding SearchCommand}" />
+        <Button Classes="ghost" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh item prices" Padding="8">
+          <Path Classes="icon" Data="M20 11a8 8 0 0 0-14.8-3.5M4 4v4h4 M4 13a8 8 0 0 0 14.8 3.5M20 20v-4h-4" />
+        </Button>
+      </StackPanel>
+    </Grid>
+
+    <!-- Search results -->
+    <Border Grid.Row="1" Classes="card" Padding="14" Margin="0,0,0,14" IsVisible="{Binding ShowResults}">
+      <Grid RowDefinitions="Auto,Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="Geizhals results" Classes="h3" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Classes="ghost" Command="{Binding CloseResultsCommand}" Padding="6" ToolTip.Tip="Close">
+            <Path Classes="icon" Data="M6 6l12 12 M18 6L6 18" Width="11" Height="11" />
+          </Button>
+        </Grid>
+        <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding IsSearching}" Height="3" MinHeight="3" Margin="0,8" />
+        <ScrollViewer Grid.Row="2" Height="252" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,8,0,0">
+          <ItemsControl ItemsSource="{Binding SearchResults}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="10" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:ItemHitViewModel">
+                <Border Classes="card" Width="186" Padding="10" BoxShadow="none">
+                  <Grid RowDefinitions="Auto,*,Auto,Auto">
+                    <Border Background="White" CornerRadius="8" Height="96" Padding="6">
+                      <Image Source="{Binding Image}" Stretch="Uniform" />
+                    </Border>
+                    <TextBlock Grid.Row="1" Text="{Binding Name}" TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis"
+                               FontWeight="Medium" Classes="small" Margin="0,8,0,4" />
+                    <StackPanel Grid.Row="2" Spacing="1" Margin="0,0,0,8">
+                      <TextBlock Text="{Binding PriceText}" Classes="price" />
+                      <TextBlock Text="{Binding OffersText}" Classes="sub xs" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Grid Grid.Row="3" ColumnDefinitions="*,6,Auto">
+                      <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                              Content="Track" IsVisible="{Binding !Added}"
+                              Command="{Binding $parent[ItemsControl].((vm:ItemsPageViewModel)DataContext).AddCommand}"
+                              CommandParameter="{Binding}" />
+                      <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Content="✓ Tracking"
+                              IsVisible="{Binding Added}" IsEnabled="False" />
+                      <Button Grid.Column="2" Classes="ghost" Command="{Binding OpenCommand}" ToolTip.Tip="Open on Geizhals" Padding="8">
+                        <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="12" Height="12" />
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+
+    <!-- Body -->
+    <Grid Grid.Row="2" ColumnDefinitions="*,16,360">
+
+      <Border Grid.ColumnSpan="3" Classes="card" IsVisible="{Binding IsEmpty}" VerticalAlignment="Top" Padding="40" Margin="0,10,0,0">
+        <StackPanel HorizontalAlignment="Center" Spacing="10" MaxWidth="440">
+          <Path Data="M6 7h12l1 13H5L6 7Z M9 7V6a3 3 0 0 1 6 0v1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.6"
+                Width="44" Height="44" Stretch="Uniform" HorizontalAlignment="Center" />
+          <TextBlock Text="Your wishlist is empty" Classes="h2" HorizontalAlignment="Center" />
+          <TextBlock Classes="sub" TextWrapping="Wrap" TextAlignment="Center"
+                     Text="Search for a product above and press “Track”. Price Tracker checks Geizhals regularly and records the cheapest new price and used / refurbished offers." />
+        </StackPanel>
+      </Border>
+
+      <ListBox Classes="rows" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" Padding="0,0,0,20">
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="vm:ItemViewModel">
+            <Border Classes="card row" Padding="10">
+              <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                <Border Background="White" CornerRadius="8" Width="64" Height="64" Padding="5">
+                  <Image Source="{Binding Image}" Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="14,2,10,0" VerticalAlignment="Center" Spacing="6" ClipToBounds="True">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="{DynamicResource FontL}" TextTrimming="CharacterEllipsis" />
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Border Classes="pill deal" IsVisible="{Binding IsDeal}" ToolTip.Tip="{Binding DealReasons}">
+                      <TextBlock Text="{Binding DealBadge}" />
+                    </Border>
+                    <TextBlock Text="{Binding TrendText}" Classes="xs" FontWeight="SemiBold" VerticalAlignment="Center"
+                               Classes.good="{Binding TrendDown}" Classes.sub="{Binding !TrendDown}" />
+                  </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Width="104" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="NEW" Classes="caps" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding NewPriceText}" Classes="price" FontSize="{DynamicResource FontL}" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding NewShopText}" Classes="sub xs" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <Border Grid.Column="3" Width="1" Background="{DynamicResource Separator}" Margin="14,6,0,6" HorizontalAlignment="Left" />
+                <StackPanel Grid.Column="3" Width="104" Margin="15,0,4,0" VerticalAlignment="Center" Spacing="2">
+                  <TextBlock Text="USED" Classes="caps" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding UsedPriceText}" Classes="price sub" FontSize="{DynamicResource FontL}" HorizontalAlignment="Right" />
+                  <TextBlock Text="{Binding UsedLabelText}" Classes="sub xs" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <ScrollViewer Grid.Column="2" IsVisible="{Binding !IsEmpty}" Padding="0,0,0,20">
+        <Border Classes="card" Padding="0" DataContext="{Binding Selected}" x:DataType="vm:ItemViewModel" ClipToBounds="True"
+                IsVisible="{Binding $self.DataContext, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <StackPanel>
+            <Panel Height="190" Background="White">
+              <Image Source="{Binding Image}" Stretch="Uniform" Margin="18" />
+              <Border Classes="pill deal" IsVisible="{Binding IsDeal}" Margin="12" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <TextBlock Text="{Binding DealBadge}" />
+              </Border>
+            </Panel>
+            <Border Height="1" Background="{DynamicResource Separator}" />
+            <StackPanel Margin="18,16,18,18" Spacing="14">
+              <StackPanel Spacing="3">
+                <TextBlock Text="{Binding Name}" Classes="h2" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding CheckedText}" Classes="sub small" Classes.error="{Binding HasError}" TextWrapping="Wrap" />
+              </StackPanel>
+
+              <Border Background="{DynamicResource DealSoftBrush}" CornerRadius="10" Padding="12,9" IsVisible="{Binding IsDeal}">
+                <TextBlock Text="{Binding DealReasons}" TextWrapping="Wrap" Foreground="{DynamicResource DealBrush}" FontWeight="Medium" Classes="small" />
+              </Border>
+
+              <Grid ColumnDefinitions="*,12,*">
+                <Border Classes="card" Padding="12" BoxShadow="none">
+                  <StackPanel Spacing="3">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" />
+                      <TextBlock Text="NEW" Classes="caps" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding NewPriceText}" Classes="price h2" />
+                    <TextBlock Text="{Binding NewShopText}" Classes="sub xs" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Classes="card" Padding="12" BoxShadow="none">
+                  <StackPanel Spacing="3">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Ellipse Width="8" Height="8" Fill="{DynamicResource KeyBrush}" />
+                      <TextBlock Text="USED / REFURB." Classes="caps" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding UsedPriceText}" Classes="price h2" />
+                    <TextBlock Text="{Binding UsedLabelText}" Classes="sub xs" TextTrimming="CharacterEllipsis" />
+                  </StackPanel>
+                </Border>
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*,*">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="USUAL" Classes="caps" />
+                  <TextBlock Text="{Binding UsualText}" Classes="price" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="LOWEST" Classes="caps" />
+                  <TextBlock Text="{Binding LowestText}" Classes="price good" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                  <TextBlock Text="HIGHEST" Classes="caps" />
+                  <TextBlock Text="{Binding HighestText}" Classes="price" />
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="6">
+                <TextBlock Text="PRICE HISTORY" Classes="caps" />
+                <c:PriceChart Height="210" Points="{Binding History}" SeriesAName="New" SeriesBName="Used"
+                              SeriesABrush="{DynamicResource AccentBrush}" SeriesBBrush="{DynamicResource KeyBrush}"
+                              GridBrush="{DynamicResource ChartGrid}" LabelBrush="{DynamicResource TextSecondary}"
+                              TooltipBackground="{DynamicResource TooltipBg}" FontFamily="{DynamicResource AppFont}" />
+              </StackPanel>
+
+              <WrapPanel Orientation="Horizontal">
+                <Button Classes="link" Command="{Binding OpenGeizhalsCommand}" Margin="0,0,6,6">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Geizhals" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />
+                    <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="link" Command="{Binding OpenOffersCommand}" Margin="0,0,6,6">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="All offers" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />
+                    <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="link" Command="{Binding OpenUsedCommand}" IsVisible="{Binding HasUsed}" Margin="0,0,6,6">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Used offer" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />
+                    <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
+                  </StackPanel>
+                </Button>
+              </WrapPanel>
+              <Button Classes="ghost danger" Command="{Binding RemoveCommand}" HorizontalAlignment="Left" Content="Remove from wishlist" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

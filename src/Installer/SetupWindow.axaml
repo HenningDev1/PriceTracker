@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PriceTrackerSetup.SetupWindow"
+        Title="Price Tracker Setup"
+        Icon="/Assets/app.ico"
+        Width="580" Height="430" CanResize="False"
+        Background="{DynamicResource Bg}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        WindowStartupLocation="CenterScreen">
+  <Border Name="Root" Background="{DynamicResource Bg}">
+    <Grid RowDefinitions="44,*,Auto">
+
+      <!-- Title bar -->
+      <Panel Name="TitleBar" Background="Transparent">
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0" VerticalAlignment="Center">
+          <Ellipse Name="CloseLight" Classes="light" Fill="#FF5F57" Cursor="Hand" ToolTip.Tip="Close" />
+          <Ellipse Name="MinLight" Classes="light" Fill="#FEBC2E" Cursor="Hand" ToolTip.Tip="Minimize" />
+          <Ellipse Classes="light" Fill="#C8C8CC" />
+        </StackPanel>
+        <TextBlock Name="WindowTitle" Text="Price Tracker Setup" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   FontSize="13" FontWeight="SemiBold" Classes="sub" />
+      </Panel>
+
+      <!-- Pages -->
+      <Grid Grid.Row="1" ColumnDefinitions="170,*" Margin="34,10,34,0">
+        <StackPanel VerticalAlignment="Top" Margin="0,6,0,0">
+          <Image Source="/Assets/app-256.png" Width="128" Height="128" />
+        </StackPanel>
+
+        <!-- Welcome / install options -->
+        <StackPanel Name="PageWelcome" Grid.Column="1" Spacing="10" Margin="10,0,0,0">
+          <TextBlock Name="WelcomeTitle" Text="Install Price Tracker" FontSize="24" FontWeight="Bold" />
+          <TextBlock Name="WelcomeText" Classes="sub" TextWrapping="Wrap" FontSize="13" LineHeight="19"
+                     Text="Tracks your Steam wishlist, the cheapest game keys and hardware prices from Geizhals – and tells you when something is a real deal." />
+          <Border Background="{DynamicResource Card}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,6,0,0">
+            <StackPanel Spacing="4">
+              <CheckBox Name="DesktopShortcut" Content="Create a desktop shortcut" IsChecked="True" />
+              <CheckBox Name="LaunchAfter" Content="Open Price Tracker when finished" IsChecked="True" />
+              <TextBlock Name="LocationText" Classes="sub" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- Uninstall confirmation -->
+        <StackPanel Name="PageUninstall" Grid.Column="1" Spacing="10" Margin="10,0,0,0" IsVisible="False">
+          <TextBlock Text="Uninstall Price Tracker" FontSize="24" FontWeight="Bold" />
+          <TextBlock Classes="sub" TextWrapping="Wrap" FontSize="13" LineHeight="19"
+                     Text="Price Tracker, its shortcuts and its entry in Settings › Apps will be removed from this PC." />
+          <Border Background="{DynamicResource Card}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="12" Padding="14,10" Margin="0,6,0,0">
+            <StackPanel Spacing="4">
+              <CheckBox Name="RemoveData" Content="Also delete my wishlist, price history and settings" />
+              <TextBlock Classes="sub" FontSize="11" TextWrapping="Wrap"
+                         Text="Leave this unchecked to keep your data for a later reinstall." />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- Progress -->
+        <StackPanel Name="PageProgress" Grid.Column="1" Spacing="12" Margin="10,30,0,0" IsVisible="False">
+          <TextBlock Name="ProgressTitle" Text="Installing…" FontSize="24" FontWeight="Bold" />
+          <ProgressBar Name="Bar" Minimum="0" Maximum="1" Height="6" MinHeight="6" CornerRadius="3" Foreground="{DynamicResource Accent}" />
+          <TextBlock Name="ProgressText" Classes="sub" FontSize="12" />
+        </StackPanel>
+
+        <!-- Done -->
+        <StackPanel Name="PageDone" Grid.Column="1" Spacing="10" Margin="10,20,0,0" IsVisible="False">
+          <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource Accent}" HorizontalAlignment="Left">
+            <Path Data="M5 12l5 5 9-10" Stroke="White" StrokeThickness="2.6" StrokeLineCap="Round" StrokeJoin="Round"
+                  Width="20" Height="20" Stretch="Uniform" />
+          </Border>
+          <TextBlock Name="DoneTitle" Text="Price Tracker is installed" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" />
+          <TextBlock Name="DoneText" Classes="sub" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+        </StackPanel>
+      </Grid>
+
+      <!-- Footer buttons -->
+      <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Padding="20,14">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Name="SecondaryLeft" Content="Uninstall" IsVisible="False" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <Button Name="CancelButton" Content="Cancel" />
+            <Button Name="PrimaryButton" Classes="primary" Content="Install" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>

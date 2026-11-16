@@ -1,0 +1,234 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PriceTracker.ViewModels"
+             xmlns:s="using:PriceTracker.Services"
+             xmlns:c="using:PriceTracker.Controls"
+             x:Class="PriceTracker.Views.SettingsView"
+             x:DataType="vm:SettingsPageViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Border.sep">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource Separator}" />
+    </Style>
+    <Style Selector="ListBox.swatches">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.swatches > ListBoxItem">
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="Margin" Value="0,0,4,0" />
+      <Setter Property="CornerRadius" Value="20" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="ListBox.swatches > ListBoxItem /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.swatches > ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource TextSecondary}" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.swatches > ListBoxItem:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource HoverBg}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="28,26,28,28" Spacing="16" MaxWidth="880" HorizontalAlignment="Left">
+      <StackPanel>
+        <TextBlock Text="Settings" Classes="h1" />
+        <TextBlock Text="Changes are saved automatically." Classes="sub" Margin="0,2,0,0" />
+      </StackPanel>
+
+      <!-- Appearance -->
+      <Border Classes="card" Padding="20,10">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <TextBlock Text="Appearance" Classes="h3" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Classes="ghost" Content="Reset" HorizontalAlignment="Right" Command="{Binding ResetAppearanceCommand}" />
+          </Grid>
+          <Border Classes="sep" />
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Theme" FontWeight="Medium" />
+              <TextBlock Text="Follow Windows or pick one" Classes="sub xs" />
+            </StackPanel>
+            <Border Grid.Column="1" Background="{DynamicResource ChipBg}" CornerRadius="9" Padding="3" HorizontalAlignment="Left">
+              <StackPanel Orientation="Horizontal" Spacing="2">
+                <RadioButton Classes="seg" GroupName="mode" Content="System" IsChecked="{Binding ThemeMode, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=System}" />
+                <RadioButton Classes="seg" GroupName="mode" Content="Light" IsChecked="{Binding ThemeMode, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=Light}" />
+                <RadioButton Classes="seg" GroupName="mode" Content="Dark" IsChecked="{Binding ThemeMode, Converter={x:Static c:EqualsConverter.Instance}, ConverterParameter=Dark}" />
+              </StackPanel>
+            </Border>
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Accent colour" FontWeight="Medium" />
+              <TextBlock Text="{Binding Accent.Name}" Classes="sub xs" />
+            </StackPanel>
+            <ListBox Grid.Column="1" Classes="swatches" ItemsSource="{Binding Accents}" SelectedItem="{Binding Accent}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="s:AccentOption">
+                  <Ellipse Width="22" Height="22" Fill="{Binding Brush}" ToolTip.Tip="{Binding Name}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Font" FontWeight="Medium" />
+              <TextBlock Text="Inter is bundled with the app" Classes="sub xs" />
+            </StackPanel>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding Fonts}" SelectedItem="{Binding FontFamily}" Width="280" MaxDropDownHeight="360">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Text="{Binding}" FontFamily="{Binding}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Text size" FontWeight="Medium" />
+              <TextBlock Text="{Binding FontScale, StringFormat={}{0:P0}}" Classes="sub xs" />
+            </StackPanel>
+            <Slider Grid.Column="1" Minimum="0.85" Maximum="1.25" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                    Value="{Binding FontScale}" Width="280" HorizontalAlignment="Left" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Games -->
+      <Border Classes="card" Padding="20,10">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*" Margin="0,10"><TextBlock Text="Steam &amp; keys" Classes="h3" /></Grid>
+          <Border Classes="sep" />
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Steam profile" FontWeight="Medium" />
+              <TextBlock Text="Profile link, custom name or SteamID64. Wishlist must be public." Classes="sub xs" TextWrapping="Wrap" Margin="0,0,16,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <TextBox Text="{Binding SteamProfile}" Watermark="https://steamcommunity.com/id/yourname" Width="360" />
+              <Button Classes="accent" Content="Sync now" Command="{Binding ImportWishlistCommand}" />
+            </StackPanel>
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Store region" FontWeight="Medium" />
+              <TextBlock Text="Country used for Steam prices (EUR)" Classes="sub xs" />
+            </StackPanel>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding Countries}" SelectedItem="{Binding Country}" Width="120" />
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Track key prices" FontWeight="Medium" />
+              <TextBlock Text="Cheapest key per game from KeyForSteam" Classes="sub xs" />
+            </StackPanel>
+            <ToggleSwitch Grid.Column="1" IsChecked="{Binding TrackKeys}" OnContent="" OffContent="" />
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="IsThereAnyDeal API key" FontWeight="Medium" />
+              <TextBlock Text="Optional – adds real Steam all-time lows" Classes="sub xs" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <TextBox Text="{Binding ItadApiKey}" PasswordChar="•" Watermark="Not set" Width="360" />
+              <Button Classes="link" Content="Get a free key" Command="{Binding OpenItadCommand}" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Items -->
+      <Border Classes="card" Padding="20,10">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*" Margin="0,10"><TextBlock Text="Item prices" Classes="h3" /></Grid>
+          <Border Classes="sep" />
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Geizhals site" FontWeight="Medium" />
+              <TextBlock Text="Which country's shops to compare" Classes="sub xs" />
+            </StackPanel>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding GeizhalsDomains}" SelectedItem="{Binding GeizhalsDomain}" Width="160" />
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Browser engine" FontWeight="Medium" />
+              <TextBlock Text="Geizhals is read through Microsoft Edge WebView2" Classes="sub xs" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <Ellipse Width="9" Height="9" Fill="{DynamicResource GoodBrush}" IsVisible="{Binding WebViewOk}" />
+              <TextBlock Text="Ready" IsVisible="{Binding WebViewOk}" />
+              <Ellipse Width="9" Height="9" Fill="{DynamicResource DealBrush}" IsVisible="{Binding !WebViewOk}" />
+              <TextBlock Text="WebView2 runtime not found – install it from microsoft.com" IsVisible="{Binding !WebViewOk}" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Tracking & deals -->
+      <Border Classes="card" Padding="20,10">
+        <StackPanel>
+          <Grid ColumnDefinitions="250,*" Margin="0,10"><TextBlock Text="Tracking &amp; deals" Classes="h3" /></Grid>
+          <Border Classes="sep" />
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Check prices every" FontWeight="Medium" />
+              <TextBlock Text="While Price Tracker is open" Classes="sub xs" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <ComboBox ItemsSource="{Binding RefreshOptions}" SelectedItem="{Binding RefreshHours}" Width="90" />
+              <TextBlock Text="hours" VerticalAlignment="Center" Classes="sub" />
+            </StackPanel>
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Item deal threshold" FontWeight="Medium" />
+              <TextBlock Classes="sub xs" TextWrapping="Wrap" Margin="0,0,16,0"
+                         Text="{Binding ItemDealPercent, StringFormat='New price at least {0:0}% under its usual price'}" />
+            </StackPanel>
+            <Slider Grid.Column="1" Minimum="5" Maximum="40" TickFrequency="1" IsSnapToTickEnabled="True"
+                    Value="{Binding ItemDealPercent}" Width="280" HorizontalAlignment="Left" />
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Steam sale threshold" FontWeight="Medium" />
+              <TextBlock Classes="sub xs" Text="{Binding GameDealDiscount, StringFormat='Steam discount of at least {0:0}%'}" />
+            </StackPanel>
+            <Slider Grid.Column="1" Minimum="20" Maximum="90" TickFrequency="5" IsSnapToTickEnabled="True"
+                    Value="{Binding GameDealDiscount}" Width="280" HorizontalAlignment="Left" />
+          </Grid>
+          <Grid ColumnDefinitions="250,*" Margin="0,10">
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="Key deal threshold" FontWeight="Medium" />
+              <TextBlock Classes="sub xs" TextWrapping="Wrap" Margin="0,0,16,0"
+                         Text="{Binding KeyDealPercent, StringFormat='Key at least {0:0}% under Steam\'s regular price'}" />
+            </StackPanel>
+            <Slider Grid.Column="1" Minimum="20" Maximum="85" TickFrequency="5" IsSnapToTickEnabled="True"
+                    Value="{Binding KeyDealPercent}" Width="280" HorizontalAlignment="Left" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- About -->
+      <Border Classes="card" Padding="20,16">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Image Source="/Assets/app-256.png" Width="48" Height="48" />
+          <StackPanel Grid.Column="1" Margin="14,0" VerticalAlignment="Center">
+            <TextBlock FontWeight="SemiBold"><Run Text="Price Tracker " /><Run Text="{Binding Version}" /></TextBlock>
+            <TextBlock Text="{Binding DataFolder, StringFormat='Data: {0}'}" Classes="sub xs" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <Button Content="Open data folder" Command="{Binding OpenDataFolderCommand}" />
+            <Button Content="GitHub" Command="{Binding OpenRepoCommand}" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
