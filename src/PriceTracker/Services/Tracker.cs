@@ -46,8 +46,22 @@ public sealed class Tracker
         if (!AutoRefreshEnabled || IsBusy) return;
         if (Data.Games.Count == 0 && Data.Items.Count == 0 && string.IsNullOrWhiteSpace(Settings.SteamProfile)) return;
         var due = Data.LastRefresh == null || DateTime.Now - Data.LastRefresh > TimeSpan.FromHours(Math.Max(1, Settings.RefreshHours));
-        if (due) await RefreshAllAsync(syncWishlist: true);
+        if (due) { await RefreshAllAsync(syncWishlist: true); return; }
+
+        // Items that have never had Geizhals' own history (added before it existed, or the fetch failed):
+        // pick it up now instead of waiting for the next scheduled refresh. Tried once per app run.
+        var missing = Data.Items.Where(i => i.GeizhalsHistoryFetched == null
+                                            && System.Text.RegularExpressions.Regex.IsMatch(i.Url, @"-a\d+\.html")
+                                            && _historyTried.Add(i.Url)).ToList();
+        if (missing.Count > 0)
+            await RunAsync(async () =>
+            {
+                await RefreshItemsCoreAsync(missing);
+                Status($"Loaded Geizhals price history for {missing.Count(i => i.GeizhalsHistory.Count > 0)} item(s)");
+            });
     }
+
+    private readonly HashSet<string> _historyTried = new();
 
     public void Save() => Storage.SaveData(Data);
 
