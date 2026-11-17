@@ -196,7 +196,7 @@ public sealed class Tracker
         {
             Status("Checking GG.deals…");
             try { gg = await GgDealsService.GetPricesAsync(Settings.GgDealsApiKey, games.Select(g => g.AppId).ToList(), Settings.Country); }
-            catch (Exception ex) { ggError = ex.Message; }
+            catch (Exception ex) { ggError = ex.Message; Status(ex.Message); }
         }
 
         int i = 0;
@@ -236,7 +236,7 @@ public sealed class Tracker
                         keyFresh = true;
                     }
                 }
-                catch (Exception ex) { g.LastError = "Keys: " + ex.Message; }
+                catch (Exception ex) { g.LastError = "Keys: " + (ggError != null ? ggError + " — " : "") + ex.Message; }
             }
             g.LastChecked = DateTime.Now;
             // Only record key prices we actually just saw (a stale value would fake a flat line).
