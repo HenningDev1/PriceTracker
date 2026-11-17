@@ -37,8 +37,13 @@ public sealed partial class GameViewModel : ObservableObject
     public string RegularText => Format.Money(Entry.SteamRegular);
 
     public bool HasKey => Entry.KeyPrice.HasValue;
-    public string KeyPriceText => Entry.KeyPrice.HasValue ? Format.Money(Entry.KeyPrice) : Entry.KeyPageUrl == null ? "No keys found" : "—";
-    public string KeyShopText => Entry.KeyShop == null
+    public string KeyPriceText => Entry.KeyPrice.HasValue ? Format.Money(Entry.KeyPrice)
+        : KeysUnavailable ? "Unavailable"
+        : Entry.KeyPageUrl == null && Entry.KeySource == null ? "No keys found" : "—";
+    /// The key source couldn't be reached – that's not the same as "this game has no keys".
+    public bool KeysUnavailable => Entry.KeyPrice == null && Entry.LastError?.StartsWith("Keys:") == true;
+    public string KeyShopText => KeysUnavailable ? (string.IsNullOrEmpty(_tracker.Settings.GgDealsApiKey) ? "Add GG.deals key in Settings" : "Source unreachable")
+        : Entry.KeyShop == null
         ? (Entry.KeyOffers > 0 ? $"{Entry.KeyOffers} offers" : Entry.KeySource ?? "Key shops")
         : Entry.KeyOffers > 0 ? $"{Entry.KeyShop} · {Entry.KeyOffers} offers" : Entry.KeyShop;
 

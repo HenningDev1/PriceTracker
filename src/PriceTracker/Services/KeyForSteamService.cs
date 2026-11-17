@@ -68,15 +68,20 @@ public static partial class KeyForSteamService
 
             var offers = agg["offers"]?.AsArray()
                 .Select(o => (Price: Http.ParsePrice(o?["price"]?.ToString()), Shop: (string?)o?["seller"]?["name"]))
-                .Where(o => o.Price.HasValue)
+                .Where(o => o.Price.HasValue && !IsOfficialStore(o.Shop))
                 .ToList() ?? new();
             var best = offers.OrderBy(o => o.Price).FirstOrDefault();
-            decimal? low = best.Price ?? Http.ParsePrice(agg["lowPrice"]?.ToString());
+            decimal? low = best.Price;
             int count = (int?)agg["offerCount"] ?? offers.Count;
             return new KeyOffer(pageUrl, low, best.Shop, count);
         }
         return new KeyOffer(pageUrl, null, null, 0);
     }
+
+    // KeyForSteam also lists official stores; those aren't key offers.
+    private static readonly string[] OfficialStores = { "steam", "epic", "gog", "humble", "microsoft", "xbox", "playstation", "ubisoft", "ea app", "origin", "battle.net", "nintendo" };
+    private static bool IsOfficialStore(string? shop) =>
+        shop != null && OfficialStores.Any(o => shop.Trim().Equals(o, StringComparison.OrdinalIgnoreCase) || shop.StartsWith(o + " ", StringComparison.OrdinalIgnoreCase));
 
     private static JsonNode? FindAggregate(JsonNode? node)
     {
