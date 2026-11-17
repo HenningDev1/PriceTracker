@@ -45,4 +45,31 @@ public static class ItadService
         }
         return result;
     }
+
+    /// ITAD's id for a Steam app (needed for every other call).
+    public static async Task<string?> LookupAsync(string key, int appId, CancellationToken ct = default)
+    {
+        var json = await Http.Client.GetStringAsync($"{Api}/games/lookup/v1?key={Uri.EscapeDataString(key)}&appid={appId}", ct);
+        return (string?)JsonNode.Parse(json)?["game"]?["id"];
+    }
+
+    /// Steam's own price history (every price change ITAD has seen on Steam, years back).
+    public static async Task<List<PriceTracker.Models.PricePoint>> GetSteamHistoryAsync(string key, string itadId, string country, CancellationToken ct = default)
+    {
+        var url = $"{Api}/games/history/v2?key={Uri.EscapeDataString(key)}&id={Uri.EscapeDataString(itadId)}&country={country}&shops={SteamShopId}&since={Uri.EscapeDataString("2005-01-01T00:00:00Z")}";
+        var json = await Http.Client.GetStringAsync(url, ct);
+        var rows = new List<(DateTime T, decimal P)>();
+        foreach (var e in JsonNode.Parse(json)?.AsArray() ?? new JsonArray())
+        {
+            var ts = (string?)e?["timestamp"];
+            var amount = (decimal?)e?["deal"]?["price"]?["amount"];
+            if (ts == null || amount == null || !DateTimeOffset.TryParse(ts, out var t)) continue;
+            rows.Add((t.LocalDateTime, Math.Round(amount.Value, 2)));
+        }
+        var result = new List<PriceTracker.Models.PricePoint>();
+        foreach (var r in rows.OrderBy(r => r.T))
+            if (result.Count == 0 || result[^1].A != r.P)
+                result.Add(new PriceTracker.Models.PricePoint { Time = r.T, A = r.P });
+        return result;
+    }
 }

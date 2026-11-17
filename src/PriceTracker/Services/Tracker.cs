@@ -53,7 +53,7 @@ public sealed class Tracker
         var missing = Data.Items.Where(i => i.GeizhalsHistoryFetched == null
                                             && System.Text.RegularExpressions.Regex.IsMatch(i.Url, @"-a\d+\.html")
                                             && _historyTried.Add(i.Url)).ToList();
-        var gamesMissing = Data.Games.Where(g => g.GgHistoryFetched == null && !g.IsFree && _historyTried.Add("game:" + g.AppId)).ToList();
+        var gamesMissing = Data.Games.Where(g => (g.GgHistoryFetched == null || (g.SteamHistoryFetched == null && !string.IsNullOrWhiteSpace(Settings.ItadApiKey))) && !g.IsFree && _historyTried.Add("game:" + g.AppId)).ToList();
         if (gamesMissing.Count > 0)
             await RunAsync(async () => { await FetchGameHistoriesAsync(gamesMissing); Status("Game price histories loaded"); });
         if (missing.Count > 0)
@@ -266,6 +266,29 @@ public sealed class Tracker
     /// GG.deals' long-term price chart, at most once a day per game (read through the built-in browser).
     private async Task FetchGameHistoriesAsync(IReadOnlyList<GameEntry> games)
     {
+        if (!string.IsNullOrWhiteSpace(Settings.ItadApiKey))
+        {
+            var steamDue = games.Where(g => !g.IsFree && (g.SteamHistoryFetched == null || DateTime.Now - g.SteamHistoryFetched > TimeSpan.FromHours(20))).ToList();
+            int k = 0;
+            foreach (var g in steamDue)
+            {
+                k++;
+                Status($"Loading Steam price history {k}/{steamDue.Count} · {g.Name}");
+                try
+                {
+                    g.ItadId ??= await ItadService.LookupAsync(Settings.ItadApiKey, g.AppId);
+                    if (g.ItadId != null)
+                    {
+                        var h = await ItadService.GetSteamHistoryAsync(Settings.ItadApiKey, g.ItadId, Settings.Country);
+                        if (h.Count > 0) g.SteamHistory = h;
+                    }
+                    g.SteamHistoryFetched = DateTime.Now;
+                }
+                catch { /* optional; tried again next refresh */ }
+                if (k % 10 == 0) { Save(); DataChanged?.Invoke(); }
+                await Task.Delay(300);
+            }
+        }
         if (!BrowserFetcher.IsAvailable) return;
         var due = games.Where(g => !g.IsFree && (g.GgHistoryFetched == null || DateTime.Now - g.GgHistoryFetched > TimeSpan.FromHours(20))).ToList();
         int n = 0;

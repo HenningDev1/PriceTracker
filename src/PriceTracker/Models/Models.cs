@@ -32,6 +32,10 @@ public sealed class GameEntry
     /// GG.deals' long-term chart: A = best official-store price, B = best key price.
     public List<PricePoint> GgHistory { get; set; } = new();
     public DateTime? GgHistoryFetched { get; set; }
+    /// Steam's own price history from IsThereAnyDeal (A only).
+    public List<PricePoint> SteamHistory { get; set; } = new();
+    public DateTime? SteamHistoryFetched { get; set; }
+    public string? ItadId { get; set; }
 
     // KeyForSteam
     public string? KeyPageUrl { get; set; }

@@ -93,7 +93,20 @@ public static class DealRules
     {
         var own = g.History.OrderBy(p => p.Time).ToList();
         var start = own.Count > 0 ? own[0].Time : DateTime.MaxValue;
-        return g.GgHistory.Where(p => p.Time < start).Concat(own).OrderBy(p => p.Time).ToList();
+        // Before own records: Steam line from IsThereAnyDeal (else GG.deals' official-store line), key line from GG.deals.
+        var steam = g.SteamHistory.Count > 0 ? g.SteamHistory : g.GgHistory;
+        var events = steam.Where(p => p.Time < start && p.A.HasValue).Select(p => (p.Time, Key: false, V: p.A!.Value))
+            .Concat(g.GgHistory.Where(p => p.Time < start && p.B.HasValue).Select(p => (p.Time, Key: true, V: p.B!.Value)))
+            .OrderBy(e => e.Time);
+        var result = new List<PricePoint>();
+        decimal? a = null, b = null;
+        foreach (var grp in events.GroupBy(e => e.Time))
+        {
+            foreach (var e in grp) { if (e.Key) b = e.V; else a = e.V; }
+            if (result.Count > 0 && result[^1].A == a && result[^1].B == b) continue;
+            result.Add(new PricePoint { Time = grp.Key, A = a, B = b });
+        }
+        return result.Concat(own).ToList();
     }
 
     /// Geizhals' long-term daily history up to where Price Tracker's own records start, then the own records

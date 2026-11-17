@@ -74,9 +74,12 @@ public sealed partial class GameViewModel : ObservableObject
 
     public List<PricePoint> History { get; } = new();
     public bool HasGgHistory => Entry.GgHistory.Count > 0;
-    public string SeriesAName => HasGgHistory ? "Store" : "Steam";
-    public string HistorySourceText => HasGgHistory
-        ? $"Price history from GG.deals since {Entry.GgHistory[0].Time:MMM yyyy} (store line = cheapest official store) + recorded by Price Tracker · last 2 years shown"
+    public bool HasSteamHistory => Entry.SteamHistory.Count > 0;
+    public string SeriesAName => HasSteamHistory || !HasGgHistory ? "Steam" : "Store";
+    public string HistorySourceText => HasSteamHistory
+        ? $"Steam history since {Entry.SteamHistory[0].Time:MMM yyyy} from IsThereAnyDeal" + (HasGgHistory ? ", key prices from GG.deals" : "") + " + recorded by Price Tracker · last 2 years shown"
+        : HasGgHistory
+        ? $"Price history from GG.deals since {Entry.GgHistory[0].Time:MMM yyyy} (store line = cheapest official store; add a free IsThereAnyDeal key in Settings for Steam's own history) · last 2 years shown"
         : "Recorded by Price Tracker since you added the game";
 
     [RelayCommand] private void OpenSteam() => Links.Open(SteamService.StoreUrl(Entry.AppId));
