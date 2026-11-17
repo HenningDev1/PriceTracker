@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using PriceTracker.Models;
 
 namespace PriceTracker.Services;
 
@@ -114,9 +116,58 @@ public static class GeizhalsService
         return JsonSerializer.Deserialize<List<GhSearchHit>>(json, Json) ?? new();
     }
 
-    public static async Task<GhProduct?> GetProductAsync(string url, CancellationToken ct = default)
+    /// Geizhals' own price chart data: daily best price for every day it has recorded (years back).
+    /// Requested from the product page exactly like the page's own chart does.
+    private const string HistoryExpression = """
+        (async () => {
+          const m = location.pathname.match(/-a(\d+)\.html/);
+          if (!m) return null;
+          const loc = (window._gh && _gh.static && _gh.static.loc) || 'de';
+          const r = await fetch('/api/gh0/price_history', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: [Number(m[1])], params: { days: 9999, loc } })
+          });
+          if (!r.ok) return null;
+          return JSON.stringify((await r.json()).response || []);
+        })()
+        """;
+
+    public static async Task<GhProduct?> GetProductAsync(string url, CancellationToken ct = default) =>
+        (await GetProductWithHistoryAsync(url, includeHistory: false, ct)).Product;
+
+    public static async Task<(GhProduct? Product, List<PricePoint>? History)> GetProductWithHistoryAsync(string url, bool includeHistory, CancellationToken ct = default)
     {
-        var json = await BrowserFetcher.Instance.RunAsync(url, ProductScript, ct);
-        return json == null ? null : JsonSerializer.Deserialize<GhProduct>(json, Json);
+        string? json, hist = null;
+        if (includeHistory)
+            (json, hist) = await BrowserFetcher.Instance.RunWithFollowUpAsync(url, ProductScript, HistoryExpression, ct);
+        else
+            json = await BrowserFetcher.Instance.RunAsync(url, ProductScript, ct);
+        var product = json == null ? null : JsonSerializer.Deserialize<GhProduct>(json, Json);
+        return (product, hist == null ? null : ParseHistory(hist));
+    }
+
+    /// [[epochMs, price, n], …] daily → only the days where the price changed (plus the last day).
+    public static List<PricePoint> ParseHistory(string json)
+    {
+        var result = new List<PricePoint>();
+        try
+        {
+            var rows = JsonNode.Parse(json)?.AsArray();
+            if (rows == null) return result;
+            PricePoint? last = null;
+            foreach (var row in rows)
+            {
+                if (row is not JsonArray a || a.Count < 2 || a[0] is null || a[1] is null) continue;
+                var time = DateTimeOffset.FromUnixTimeMilliseconds((long)a[0]!.GetValue<double>()).LocalDateTime;
+                decimal price = (decimal)a[1]!.GetValue<double>();
+                if (price <= 0) continue;
+                var point = new PricePoint { Time = time, A = Math.Round(price, 2) };
+                if (last == null || last.A != point.A) result.Add(point);
+                last = point;
+            }
+            if (last != null && (result.Count == 0 || result[^1].Time != last.Time)) result.Add(last);
+        }
+        catch { /* format changed – ignore, own history still works */ }
+        return result;
     }
 }

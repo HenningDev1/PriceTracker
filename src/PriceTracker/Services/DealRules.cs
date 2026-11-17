@@ -15,7 +15,7 @@ public sealed record DealInfo(DealKind Kind, string Badge, string Reason, double
 ///  • Cheap key     – cheapest key ≥ KeyDealPercent (default 50 %) under Steam's regular price.
 /// Items
 ///  • Below usual   – cheapest new price ≥ ItemDealPercent (default 15 %) under its usual price
-///                    (median of the last 90 days, needs at least 3 days of history).
+///                    (median daily price of the last 90 days – Geizhals' own history plus recorded prices).
 ///  • All-time low  – new price lower than ever recorded (needs at least 7 days of history and ≥ 3 % under the usual price).
 ///  • Used bargain  – a used/refurbished offer ≥ 35 % under the cheapest new price.
 public static class DealRules
@@ -88,14 +88,43 @@ public static class DealRules
         return deals;
     }
 
+    /// Geizhals' long-term daily history up to where Price Tracker's own records start, then the own records
+    /// (which also carry the used price). Sorted by time.
+    public static List<PricePoint> ItemHistory(ItemEntry i)
+    {
+        var own = i.History.OrderBy(p => p.Time).ToList();
+        var start = own.Count > 0 ? own[0].Time : DateTime.MaxValue;
+        return i.GeizhalsHistory.Where(p => p.Time < start).Concat(own).OrderBy(p => p.Time).ToList();
+    }
+
+    /// Price for each day since <paramref name="since"/> (the price holds until it changes).
+    private static List<decimal> DailyValues(List<PricePoint> h, DateTime since)
+    {
+        var pts = h.Where(p => p.A.HasValue).ToList();
+        var days = new List<decimal>();
+        if (pts.Count == 0) return days;
+        var first = pts[0].Time.Date > since.Date ? pts[0].Time.Date : since.Date;
+        int idx = 0;
+        decimal? current = pts.LastOrDefault(p => p.Time.Date <= first)?.A;
+        for (var d = first; d <= DateTime.Now.Date; d = d.AddDays(1))
+        {
+            while (idx < pts.Count && pts[idx].Time.Date <= d) { current = pts[idx].A; idx++; }
+            if (current.HasValue) days.Add(current.Value);
+        }
+        return days;
+    }
+
+    /// Usual price = median daily price of the last 90 days (needs at least 3 days of data).
     public static decimal? UsualPrice(ItemEntry i)
     {
-        var since = DateTime.Now.AddDays(-90);
-        var values = i.History.Where(p => p.Time >= since && p.A.HasValue).Select(p => p.A!.Value).OrderBy(v => v).ToList();
-        if (values.Count < 3 || SpanDays(i.History) < 3) return null;
+        var values = DailyValues(ItemHistory(i), DateTime.Now.AddDays(-90)).OrderBy(v => v).ToList();
+        if (values.Count < 3) return null;
         int mid = values.Count / 2;
         return values.Count % 2 == 1 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
     }
+
+    public static decimal? ItemLowest(ItemEntry i) => ItemHistory(i).Where(p => p.A.HasValue).Select(p => p.A).Min();
+    public static decimal? ItemHighest(ItemEntry i) => ItemHistory(i).Where(p => p.A.HasValue).Select(p => p.A).Max();
 
     public static List<DealInfo> ForItem(ItemEntry i, AppSettings s)
     {
@@ -106,8 +135,9 @@ public static class DealRules
             if (usual is > 0)
             {
                 var off = (double)(1 - now / usual.Value) * 100;
-                var previous = i.History.Take(Math.Max(0, i.History.Count - 1)).Where(p => p.A.HasValue).Select(p => p.A!.Value).DefaultIfEmpty(decimal.MaxValue).Min();
-                bool atl = now < previous && SpanDays(i.History) >= 7 && off >= 3;
+                var hist = ItemHistory(i);
+                var previous = hist.Where(p => p.A.HasValue && p.Time < DateTime.Now.AddDays(-1)).Select(p => p.A!.Value).DefaultIfEmpty(decimal.MaxValue).Min();
+                bool atl = now < previous && SpanDays(hist) >= 7 && off >= 3;
                 if (off >= s.ItemDealPercent)
                     deals.Add(new DealInfo(atl ? DealKind.AllTimeLow : DealKind.BelowUsual, atl ? "All-time low" : $"-{off:0}%",
                         $"{off:0}% under its usual price of {Format.Money(usual)}", 60 + off + (atl ? 30 : 0)));

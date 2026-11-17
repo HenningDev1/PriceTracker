@@ -67,6 +67,12 @@ public static class SelfTest
             var p = await GeizhalsService.GetProductAsync("https://geizhals.de/apple-iphone-15-128gb-blau-a3020646.html") ?? throw new Exception("no data");
             return $"{p.Name}: new from {Format.Money(p.Offers.Where(o => o.Price.HasValue).Min(o => o.Price))}, used {Format.Money(p.Used?.Price)} ({p.Used?.Label})";
         });
+        await Step("Geizhals price history", async () =>
+        {
+            var (p, h) = await GeizhalsService.GetProductWithHistoryAsync("https://geizhals.de/sony-wh-1000xm5-schwarz-a2733874.html", includeHistory: true);
+            if (h == null || h.Count == 0) throw new Exception("no history returned");
+            return $"{p?.Name}: {h.Count} price changes since {h[0].Time:yyyy-MM-dd}, low {Format.Money(h.Min(x => x.A))}, high {Format.Money(h.Max(x => x.A))}, latest {Format.Money(h[^1].A)}";
+        });
         Line("done");
     }
 }

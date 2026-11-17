@@ -318,8 +318,15 @@ public sealed class Tracker
             Status($"Checking Geizhals {i}/{items.Count} · {item.Name}");
             try
             {
-                var p = await GeizhalsService.GetProductAsync(item.Url);
+                // Geizhals' own history is fetched once a day at most (it's daily data).
+                bool wantHistory = item.GeizhalsHistoryFetched == null || DateTime.Now - item.GeizhalsHistoryFetched > TimeSpan.FromHours(20);
+                var (p, gh) = await GeizhalsService.GetProductWithHistoryAsync(item.Url, wantHistory);
                 if (p == null) throw new InvalidOperationException("No data");
+                if (gh is { Count: > 0 })
+                {
+                    item.GeizhalsHistory = gh;
+                    item.GeizhalsHistoryFetched = DateTime.Now;
+                }
                 if (!string.IsNullOrWhiteSpace(p.Name)) item.Name = p.Name;
                 item.ImageUrl = p.Image ?? item.ImageUrl;
                 var best = p.Offers.Where(o => o.Price.HasValue).OrderBy(o => o.Price).FirstOrDefault();

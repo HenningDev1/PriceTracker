@@ -18,7 +18,7 @@ public sealed partial class ItemViewModel : ObservableObject
         Entry = entry;
         _tracker = tracker;
         Deals = DealRules.ForItem(entry, tracker.Settings);
-        History = entry.History.ToList();
+        History = DealRules.ItemHistory(entry).Where(p => p.Time >= DateTime.Now.AddYears(-2)).ToList();
         _ = LoadAsync();
     }
 
@@ -53,14 +53,18 @@ public sealed partial class ItemViewModel : ObservableObject
     public string UsedLabelText => Entry.UsedLabel ?? "None listed";
 
     public string UsualText => DealRules.UsualPrice(Entry) is { } u ? Format.Money(u) : "collecting…";
-    public string LowestText => Entry.History.Where(p => p.A.HasValue).Select(p => p.A).DefaultIfEmpty().Min() is { } l ? Format.Money(l) : "—";
-    public string HighestText => Entry.History.Where(p => p.A.HasValue).Select(p => p.A).DefaultIfEmpty().Max() is { } h ? Format.Money(h) : "—";
+    public string LowestText => DealRules.ItemLowest(Entry) is { } l ? Format.Money(l) : "—";
+    public string HighestText => DealRules.ItemHighest(Entry) is { } h ? Format.Money(h) : "—";
+    public bool HasGeizhalsHistory => Entry.GeizhalsHistory.Count > 0;
+    public string HistorySourceText => HasGeizhalsHistory
+        ? $"Geizhals price history since {Entry.GeizhalsHistory[0].Time:MMM yyyy} + recorded by Price Tracker (last 2 years shown)"
+        : "Recorded by Price Tracker";
 
     public string TrendText
     {
         get
         {
-            var pts = Entry.History.Where(p => p.A.HasValue).ToList();
+            var pts = DealRules.ItemHistory(Entry).Where(p => p.A.HasValue).ToList();
             if (pts.Count < 2) return "";
             var first = pts.First(p => p.Time >= DateTime.Now.AddDays(-30) || p == pts[^1]).A!.Value;
             var now = pts[^1].A!.Value;

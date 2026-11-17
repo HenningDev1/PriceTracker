@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="docs/icon.png" width="112" alt="Price Tracker icon" />
 </p>
 
@@ -41,7 +41,7 @@ Every game and item has an interactive **price-history chart** (hover for exact 
 | Game – all-time low | Steam price is discounted and at or below the lowest price ever seen – from GG.deals or IsThereAnyDeal (free API keys), or from 60+ days of history recorded by Price Tracker. Without that, a sale is never called an all-time low. |
 | Game – big sale | Steam discount ≥ **60 %** |
 | Game – cheap key | Cheapest key ≥ **50 %** under Steam's regular price (key prices from GG.deals, or KeyForSteam as fallback) |
-| Item – below usual | Cheapest new price ≥ **15 %** under its *usual price* (median of the last 90 days, needs ≥ 3 days of history) |
+| Item – below usual | Cheapest new price ≥ **15 %** under its *usual price* (median daily price of the last 90 days, from Geizhals' own price history plus recorded prices) |
 | Item – all-time low | New price lower than ever recorded (≥ 7 days of history, ≥ 3 % under usual) |
 | Item – used bargain | A used / refurbished offer ≥ 35 % under the cheapest new offer |
 
@@ -87,7 +87,7 @@ The 15 % item threshold was chosen because normal retail prices on Geizhals drif
 - **Key prices** from KeyForSteam, with the shop and number of offers.
 - **Geizhals search & tracking** with new and used / refurbished prices.
 - **Folders** – group variants (colours, storage sizes, every board partner's GPU…) into one row that shows the cheapest price across all of them, with a combined price chart. Pick a folder while adding search results, or move items later.
-- **Price history charts** for every game and item.
+- **Price history charts** for every game and item. Items use **Geizhals' own daily price history** (often years back), so charts and deal detection work from the day you add something.
 - **Automatic refresh** every 1 – 24 hours while the app is open, or on demand.
 - **Everything stays on your PC** – no account, no telemetry. Data lives in `%APPDATA%\PriceTracker`.
 - **Installer with uninstaller** – per-user install (no admin rights), Start-menu and optional desktop shortcut, listed in *Settings › Apps* where it can be uninstalled.

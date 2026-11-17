@@ -39,7 +39,22 @@ public sealed class BrowserFetcher
         await _gate.WaitAsync(ct);
         try
         {
-            return await Dispatcher.UIThread.InvokeAsync(() => RunOnUiAsync(url, script, ct));
+            return (await Dispatcher.UIThread.InvokeAsync(() => RunOnUiAsync(url, script, null, ct))).Main;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// Like <see cref="RunAsync"/>, then also evaluates <paramref name="asyncExpression"/> (a JS expression that
+    /// returns a Promise of a string) on the same page – e.g. a request the page itself would make for its chart.
+    public async Task<(string? Main, string? FollowUp)> RunWithFollowUpAsync(string url, string script, string asyncExpression, CancellationToken ct = default)
+    {
+        await _gate.WaitAsync(ct);
+        try
+        {
+            return await Dispatcher.UIThread.InvokeAsync(() => RunOnUiAsync(url, script, asyncExpression, ct));
         }
         finally
         {
@@ -77,7 +92,7 @@ public sealed class BrowserFetcher
         _controller.Bounds = _window.WebViewBounds();
     }
 
-    private async Task<string?> RunOnUiAsync(string url, string script, CancellationToken ct)
+    private async Task<(string? Main, string? FollowUp)> RunOnUiAsync(string url, string script, string? asyncExpression, CancellationToken ct)
     {
         await EnsureAsync();
         var web = _web!;
@@ -121,8 +136,23 @@ public sealed class BrowserFetcher
         }
 
         var raw = await web.ExecuteScriptAsync(script);
-        if (string.IsNullOrEmpty(raw) || raw == "null") return null;
-        return JsonSerializer.Deserialize<string>(raw);
+        string? main = string.IsNullOrEmpty(raw) || raw == "null" ? null : JsonSerializer.Deserialize<string>(raw);
+        if (asyncExpression == null) return (main, null);
+
+        // ExecuteScriptAsync can't await promises: start the work, then poll for its result.
+        await web.ExecuteScriptAsync(
+            "window.__ptDone=false;window.__ptOut=null;(async()=>{try{window.__ptOut=await (" + asyncExpression + ");}catch(e){window.__ptOut=null;}window.__ptDone=true;})();");
+        var until = DateTime.UtcNow.AddSeconds(20);
+        while (DateTime.UtcNow < until)
+        {
+            await Task.Delay(250, ct);
+            if (await web.ExecuteScriptAsync("window.__ptDone===true") == "true")
+            {
+                var outRaw = await web.ExecuteScriptAsync("window.__ptOut");
+                return (main, string.IsNullOrEmpty(outRaw) || outRaw == "null" ? null : JsonSerializer.Deserialize<string>(outRaw));
+            }
+        }
+        return (main, null);
     }
 
     private static bool IsChallenge(string? title)

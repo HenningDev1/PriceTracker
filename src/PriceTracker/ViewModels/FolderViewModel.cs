@@ -72,12 +72,13 @@ public sealed partial class FolderViewModel : ObservableObject
 
     private static List<PricePoint> MergeHistory(List<ItemEntry> items)
     {
-        var times = items.SelectMany(i => i.History.Select(p => p.Time)).Distinct().OrderBy(t => t).ToList();
+        var hist = items.Select(i => DealRules.ItemHistory(i).Where(p => p.Time >= DateTime.Now.AddYears(-2)).ToList()).ToList();
+        var times = hist.SelectMany(h => h.Select(p => p.Time)).Distinct().OrderBy(t => t).ToList();
         var result = new List<PricePoint>();
         foreach (var t in times)
         {
-            decimal? Min(Func<PricePoint, decimal?> sel) => items
-                .Select(i => i.History.LastOrDefault(p => p.Time <= t && sel(p).HasValue))
+            decimal? Min(Func<PricePoint, decimal?> sel) => hist
+                .Select(h => h.LastOrDefault(p => p.Time <= t && sel(p).HasValue))
                 .Where(p => p != null).Select(p => sel(p!)).Min();
             var point = new PricePoint { Time = t, A = Min(p => p.A), B = Min(p => p.B) };
             if (result.Count > 0 && result[^1].A == point.A && result[^1].B == point.B) continue;

@@ -327,6 +327,7 @@
                                     SeriesABrush="{DynamicResource AccentBrush}" SeriesBBrush="{DynamicResource KeyBrush}"
                                     GridBrush="{DynamicResource ChartGrid}" LabelBrush="{DynamicResource TextSecondary}"
                                     TooltipBackground="{DynamicResource TooltipBg}" FontFamily="{DynamicResource AppFont}" />
+                      <TextBlock Text="{Binding HistorySourceText}" Classes="sub xs" TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel Spacing="6">
                       <TextBlock Text="FOLDER" Classes="caps" />

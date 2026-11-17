@@ -61,6 +61,10 @@ public sealed class ItemEntry
     public DateTime? LastChecked { get; set; }
     public string? LastError { get; set; }
     public List<PricePoint> History { get; set; } = new();
+
+    /// Geizhals' own daily best-price history (only the days the price changed), A = new price.
+    public List<PricePoint> GeizhalsHistory { get; set; } = new();
+    public DateTime? GeizhalsHistoryFetched { get; set; }
 }
 
 public sealed class AppData
