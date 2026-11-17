@@ -73,6 +73,12 @@ public static class SelfTest
             if (h == null || h.Count == 0) throw new Exception("no history returned");
             return $"{p?.Name}: {h.Count} price changes since {h[0].Time:yyyy-MM-dd}, low {Format.Money(h.Min(x => x.A))}, high {Format.Money(h.Max(x => x.A))}, latest {Format.Money(h[^1].A)}";
         });
+        await Step("GG.deals price history", async () =>
+        {
+            var h = await GgDealsService.GetHistoryAsync(GgDealsService.GameUrl(268910)) ?? throw new Exception("no history returned");
+            if (h.Count == 0) throw new Exception("empty history");
+            return $"Cuphead: {h.Count} points since {h[0].Time:yyyy-MM-dd}, store low {Format.Money(h.Min(x => x.A))}, key low {Format.Money(h.Min(x => x.B))}";
+        });
         Line("done");
     }
 }

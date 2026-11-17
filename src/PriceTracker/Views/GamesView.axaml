@@ -179,10 +179,11 @@
 
               <StackPanel Spacing="6">
                 <TextBlock Text="PRICE HISTORY" Classes="caps" />
-                <c:PriceChart Height="210" Points="{Binding History}" SeriesAName="Steam" SeriesBName="Best key"
+                <c:PriceChart Height="210" Points="{Binding History}" SeriesAName="{Binding SeriesAName}" SeriesBName="Best key"
                               SeriesABrush="{DynamicResource SteamBrush}" SeriesBBrush="{DynamicResource KeyBrush}"
                               GridBrush="{DynamicResource ChartGrid}" LabelBrush="{DynamicResource TextSecondary}"
                               TooltipBackground="{DynamicResource TooltipBg}" FontFamily="{DynamicResource AppFont}" />
+                <TextBlock Text="{Binding HistorySourceText}" Classes="sub xs" TextWrapping="Wrap" />
                 <TextBlock Classes="sub xs" TextWrapping="Wrap">
                   <Run Text="All-time lows " /><Run Text="{Binding AtlSource}" /><Run Text=". Full Steam history on SteamDB." />
                 </TextBlock>

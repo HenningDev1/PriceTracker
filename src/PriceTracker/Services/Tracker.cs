@@ -53,6 +53,9 @@ public sealed class Tracker
         var missing = Data.Items.Where(i => i.GeizhalsHistoryFetched == null
                                             && System.Text.RegularExpressions.Regex.IsMatch(i.Url, @"-a\d+\.html")
                                             && _historyTried.Add(i.Url)).ToList();
+        var gamesMissing = Data.Games.Where(g => g.GgHistoryFetched == null && !g.IsFree && _historyTried.Add("game:" + g.AppId)).ToList();
+        if (gamesMissing.Count > 0)
+            await RunAsync(async () => { await FetchGameHistoriesAsync(gamesMissing); Status("Game price histories loaded"); });
         if (missing.Count > 0)
             await RunAsync(async () =>
             {
@@ -256,6 +259,29 @@ public sealed class Tracker
             // Only record key prices we actually just saw (a stale value would fake a flat line).
             Record(g.History, g.SteamPrice, keyFresh ? g.KeyPrice : null);
             if (i % 5 == 0) { Save(); DataChanged?.Invoke(); }
+        }
+        await FetchGameHistoriesAsync(games);
+    }
+
+    /// GG.deals' long-term price chart, at most once a day per game (read through the built-in browser).
+    private async Task FetchGameHistoriesAsync(IReadOnlyList<GameEntry> games)
+    {
+        if (!BrowserFetcher.IsAvailable) return;
+        var due = games.Where(g => !g.IsFree && (g.GgHistoryFetched == null || DateTime.Now - g.GgHistoryFetched > TimeSpan.FromHours(20))).ToList();
+        int n = 0;
+        foreach (var g in due)
+        {
+            n++;
+            Status($"Loading price history {n}/{due.Count} · {g.Name}");
+            try
+            {
+                var h = await GgDealsService.GetHistoryAsync(g.GgDealsUrl ?? GgDealsService.GameUrl(g.AppId));
+                if (h is { Count: > 0 }) g.GgHistory = h;
+                g.GgHistoryFetched = DateTime.Now;
+            }
+            catch { /* optional; tried again next refresh */ }
+            if (n % 5 == 0) { Save(); DataChanged?.Invoke(); }
+            if (n < due.Count) await Task.Delay(1500);
         }
     }
 

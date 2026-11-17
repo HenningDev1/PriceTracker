@@ -88,6 +88,14 @@ public static class DealRules
         return deals;
     }
 
+    /// GG.deals' long-term chart up to where Price Tracker's own records start, then the own records.
+    public static List<PricePoint> GameHistory(GameEntry g)
+    {
+        var own = g.History.OrderBy(p => p.Time).ToList();
+        var start = own.Count > 0 ? own[0].Time : DateTime.MaxValue;
+        return g.GgHistory.Where(p => p.Time < start).Concat(own).OrderBy(p => p.Time).ToList();
+    }
+
     /// Geizhals' long-term daily history up to where Price Tracker's own records start, then the own records
     /// (which also carry the used price). Sorted by time.
     public static List<PricePoint> ItemHistory(ItemEntry i)

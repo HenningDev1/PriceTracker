@@ -18,7 +18,7 @@ public sealed partial class GameViewModel : ObservableObject
         Entry = entry;
         _tracker = tracker;
         Deals = DealRules.ForGame(entry, tracker.Settings);
-        History = entry.History.ToList();
+        History = DealRules.GameHistory(entry).Where(p => p.Time >= DateTime.Now.AddYears(-2)).ToList();
         _ = LoadCoverAsync();
     }
 
@@ -73,6 +73,11 @@ public sealed partial class GameViewModel : ObservableObject
     public string SourceText => Entry.FromWishlist ? "Steam wishlist" : "Added manually";
 
     public List<PricePoint> History { get; } = new();
+    public bool HasGgHistory => Entry.GgHistory.Count > 0;
+    public string SeriesAName => HasGgHistory ? "Store" : "Steam";
+    public string HistorySourceText => HasGgHistory
+        ? $"Price history from GG.deals since {Entry.GgHistory[0].Time:MMM yyyy} (store line = cheapest official store) + recorded by Price Tracker · last 2 years shown"
+        : "Recorded by Price Tracker since you added the game";
 
     [RelayCommand] private void OpenSteam() => Links.Open(SteamService.StoreUrl(Entry.AppId));
     [RelayCommand] private void OpenSteamDb() => Links.Open(SteamService.SteamDbUrl(Entry.AppId));

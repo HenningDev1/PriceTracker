@@ -29,6 +29,9 @@ public sealed class GameEntry
     public decimal? KeyHistoricLow { get; set; }
     public string? GgDealsUrl { get; set; }
     public string? KeySource { get; set; }
+    /// GG.deals' long-term chart: A = best official-store price, B = best key price.
+    public List<PricePoint> GgHistory { get; set; } = new();
+    public DateTime? GgHistoryFetched { get; set; }
 
     // KeyForSteam
     public string? KeyPageUrl { get; set; }
