@@ -38,9 +38,9 @@ Every game and item has an interactive **price-history chart** (hover for exact 
 
 | Type | Rule (defaults, adjustable in Settings) |
 |---|---|
-| Game – all-time low | Steam price is discounted and at or below the lowest price ever seen (IsThereAnyDeal history if you add a free API key, otherwise the history Price Tracker recorded) |
+| Game – all-time low | Steam price is discounted and at or below the lowest price ever seen – from GG.deals or IsThereAnyDeal (free API keys), or from 60+ days of history recorded by Price Tracker. Without that, a sale is never called an all-time low. |
 | Game – big sale | Steam discount ≥ **60 %** |
-| Game – cheap key | Cheapest key ≥ **50 %** under Steam's regular price |
+| Game – cheap key | Cheapest key ≥ **50 %** under Steam's regular price (key prices from GG.deals, or KeyForSteam as fallback) |
 | Item – below usual | Cheapest new price ≥ **15 %** under its *usual price* (median of the last 90 days, needs ≥ 3 days of history) |
 | Item – all-time low | New price lower than ever recorded (≥ 7 days of history, ≥ 3 % under usual) |
 | Item – used bargain | A used / refurbished offer ≥ 35 % under the cheapest new offer |
@@ -115,14 +115,15 @@ PriceTrackerSetup.exe /quiet
 2. Press **Sync wishlist** on the Games dashboard.
 3. Go to **Wishlist**, search for a product (e.g. *RTX 5070*, *PlayStation 5 Pro*) and press **Track**.
 4. Check **Deals** now and then – or just glance at the red badge in the sidebar.
-5. *Optional:* add a free [IsThereAnyDeal API key](https://isthereanydeal.com/apps/my/) in Settings to get real Steam all-time lows from day one.
+5. **Recommended:** add a free [GG.deals API key](https://gg.deals/api/) in Settings for key prices and real all-time lows from day one. (An [IsThereAnyDeal key](https://isthereanydeal.com/apps/my/) works too for Steam-only lows.)
 
 ## How prices are collected
 
 | Source | How |
 |---|---|
 | Steam | Public store endpoints (`IWishlistService`, `IStoreBrowseService`, `appdetails`, store search). No API key. |
-| KeyForSteam | The public product page (its structured `AggregateOffer` data) and the site's quick search. Requests are spaced out and paused automatically if the site is unreachable. |
+| GG.deals | Official prices API with your own free key (personal use): cheapest key-shop price plus real all-time lows. Shown with a "Prices by GG.deals" link, as GG.deals requires. **Recommended.** |
+| KeyForSteam | Fallback when no GG.deals key is set. The public product page (its structured `AggregateOffer` data) and the site's quick search. Requests are spaced 8 s apart and paused automatically if the site is unreachable – AllKeyShop's network blocks clients that ask too fast. |
 | Geizhals | Loaded in an embedded Microsoft Edge (WebView2) – exactly like opening the page in a browser – one page at a time with pauses in between. If the site ever asks for a "confirm you're human" check, Price Tracker shows that page and **you** complete it; the app never tries to solve or bypass such checks. |
 | SteamDB | Linked, not scraped – SteamDB asks people not to scrape it, so "SteamDB" buttons open its price-history page in your browser. |
 | IsThereAnyDeal | Optional, official API with your own key. |

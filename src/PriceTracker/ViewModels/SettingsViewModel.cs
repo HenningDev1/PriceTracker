@@ -25,6 +25,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     [ObservableProperty] private string _country = "DE";
     [ObservableProperty] private bool _trackKeys = true;
     [ObservableProperty] private string _itadApiKey = "";
+    [ObservableProperty] private string _ggDealsApiKey = "";
     [ObservableProperty] private string _geizhalsDomain = "geizhals.de";
 
     [ObservableProperty] private int _refreshHours = 6;
@@ -50,6 +51,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         Country = s.Country;
         TrackKeys = s.TrackKeys;
         ItadApiKey = s.ItadApiKey;
+        GgDealsApiKey = s.GgDealsApiKey;
         GeizhalsDomain = s.GeizhalsDomain;
         RefreshHours = s.RefreshHours;
         ItemDealPercent = s.ItemDealPercent;
@@ -71,6 +73,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
         s.Country = Country;
         s.TrackKeys = TrackKeys;
         s.ItadApiKey = ItadApiKey.Trim();
+        s.GgDealsApiKey = GgDealsApiKey.Trim();
         s.GeizhalsDomain = GeizhalsDomain;
         s.RefreshHours = RefreshHours;
         s.ItemDealPercent = (int)Math.Round(ItemDealPercent);
@@ -87,6 +90,7 @@ public sealed partial class SettingsPageViewModel : PageViewModel
     [RelayCommand] private void SetMode(string mode) => ThemeMode = mode;
     [RelayCommand] private void SetAccent(AccentOption a) => Accent = a;
     [RelayCommand] private void OpenDataFolder() => Links.Open(new Uri(Storage.DataDir).AbsoluteUri);
+    [RelayCommand] private void OpenGgDeals() => Links.Open(GgDealsService.ApiPage);
     [RelayCommand] private void OpenItad() => Links.Open("https://isthereanydeal.com/apps/my/");
     [RelayCommand] private void OpenRepo() => Links.Open("https://github.com/HenningDev1/PriceTracker");
     [RelayCommand] private Task ImportWishlist() => Tracker.SyncWishlistAsync();

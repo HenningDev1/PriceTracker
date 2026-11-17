@@ -24,8 +24,11 @@ public sealed class GameEntry
     public bool IsFree { get; set; }
     public bool Unreleased { get; set; }
 
-    // Steam all-time low (IsThereAnyDeal, optional)
+    // Real all-time lows from GG.deals / IsThereAnyDeal (optional API keys)
     public decimal? SteamHistoricLow { get; set; }
+    public decimal? KeyHistoricLow { get; set; }
+    public string? GgDealsUrl { get; set; }
+    public string? KeySource { get; set; }
 
     // KeyForSteam
     public string? KeyPageUrl { get; set; }
@@ -78,6 +81,7 @@ public sealed class AppSettings
     public string Country { get; set; } = "DE";
     public string GeizhalsDomain { get; set; } = "geizhals.de";
     public string ItadApiKey { get; set; } = "";
+    public string GgDealsApiKey { get; set; } = "";
     public bool TrackKeys { get; set; } = true;
 
     // Tracking

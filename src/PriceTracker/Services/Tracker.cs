@@ -189,13 +189,38 @@ public sealed class Tracker
             catch { /* optional source */ }
         }
 
+        // GG.deals (official API, one request for up to 100 games): key prices + real all-time lows.
+        var gg = new Dictionary<int, GgPrices>();
+        string? ggError = null;
+        if (!string.IsNullOrWhiteSpace(Settings.GgDealsApiKey))
+        {
+            Status("Checking GG.deals…");
+            try { gg = await GgDealsService.GetPricesAsync(Settings.GgDealsApiKey, games.Select(g => g.AppId).ToList(), Settings.Country); }
+            catch (Exception ex) { ggError = ex.Message; }
+        }
+
         int i = 0;
         foreach (var g in games)
         {
             i++;
-            g.LastError = null;
+            g.LastError = ggError;
             bool keyFresh = false;
-            if (Settings.TrackKeys && !g.IsFree)
+            if (gg.TryGetValue(g.AppId, out var ggp))
+            {
+                g.GgDealsUrl = ggp.Url;
+                g.KeyHistoricLow = ggp.HistoricalKeyshops;
+                // ITAD's low is Steam-specific; GG.deals' retail low covers all official stores – use it if ITAD has none.
+                if (string.IsNullOrWhiteSpace(Settings.ItadApiKey)) g.SteamHistoricLow = ggp.HistoricalRetail;
+                if (Settings.TrackKeys && ggp.CurrentKeyshops.HasValue)
+                {
+                    g.KeyPrice = ggp.CurrentKeyshops;
+                    g.KeyShop = "Key shops via GG.deals";
+                    g.KeyOffers = 0;
+                    g.KeySource = "GG.deals";
+                    keyFresh = true;
+                }
+            }
+            if (Settings.TrackKeys && !g.IsFree && !keyFresh)
             {
                 Status($"Checking key prices {i}/{games.Count} · {g.Name}");
                 try
@@ -207,6 +232,7 @@ public sealed class Tracker
                         g.KeyPrice = offer?.LowPrice;
                         g.KeyShop = offer?.Shop;
                         g.KeyOffers = offer?.Offers ?? 0;
+                        g.KeySource = "KeyForSteam";
                         keyFresh = true;
                     }
                 }

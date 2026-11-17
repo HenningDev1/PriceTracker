@@ -220,7 +220,7 @@ public sealed partial class DealsPageViewModel : PageViewModel
     [ObservableProperty] private int _count;
 
     public string RulesText =>
-        $"Games: all-time low on Steam, Steam discount ≥ {Tracker.Settings.GameDealDiscount}%, or a key ≥ {Tracker.Settings.KeyDealPercent}% under Steam's regular price.\n" +
+        $"Games: all-time low on Steam (needs GG.deals/IsThereAnyDeal or {DealRules.OwnHistoryDays} days of history), Steam discount ≥ {Tracker.Settings.GameDealDiscount}%, or a key ≥ {Tracker.Settings.KeyDealPercent}% under Steam's regular price.\n" +
         $"Items: new price ≥ {Tracker.Settings.ItemDealPercent}% under its usual (90-day median) price, a new all-time low, or a used offer ≥ {DealRules.UsedBargainPercent}% under new.";
 
     public bool IsEmpty => Deals.Count == 0;
@@ -248,10 +248,10 @@ public sealed partial class DealsPageViewModel : PageViewModel
                 OldPriceText = (keyDeal || g.Discount > 0) ? Format.Money(g.SteamRegular) : null,
                 Kind = "Game",
                 PrimaryLabel = keyDeal ? "View keys" : "Steam",
-                PrimaryUrl = keyDeal && g.KeyPageUrl != null ? g.KeyPageUrl : SteamService.StoreUrl(g.AppId),
+                PrimaryUrl = keyDeal ? (g.KeySource == "GG.deals" ? g.GgDealsUrl : g.KeyPageUrl) ?? SteamService.StoreUrl(g.AppId) : SteamService.StoreUrl(g.AppId),
                 SecondaryLabel = keyDeal ? "Steam" : "SteamDB",
                 SecondaryUrl = keyDeal ? SteamService.StoreUrl(g.AppId) : SteamService.SteamDbUrl(g.AppId),
-                IsAllTimeLow = deals.Any(d => d.Kind == DealKind.AllTimeLow) || top.Badge.Contains("all-time", StringComparison.OrdinalIgnoreCase),
+                IsAllTimeLow = deals.Any(d => d.Kind == DealKind.AllTimeLow) || deals.Any(d => d.Badge.Contains("all-time", StringComparison.OrdinalIgnoreCase)),
                 Score = top.Score,
                 Wide = true,
             };

@@ -201,6 +201,13 @@
                     <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
                   </StackPanel>
                 </Button>
+                <Button Classes="link" Command="{Binding OpenGgDealsCommand}" IsVisible="{Binding HasGgDeals}" Margin="0,0,6,6"
+                        ToolTip.Tip="Key prices and all-time lows provided by GG.deals">
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Prices by GG.deals" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />
+                    <Path Classes="icon" Data="M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" Width="11" Height="11" />
+                  </StackPanel>
+                </Button>
                 <Button Classes="link" Command="{Binding OpenSteamDbCommand}" Margin="0,0,6,6">
                   <StackPanel Orientation="Horizontal" Spacing="5">
                     <TextBlock Text="SteamDB" Foreground="{Binding $parent[Button].Foreground}" FontSize="{DynamicResource FontS}" />

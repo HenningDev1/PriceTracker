@@ -13,7 +13,7 @@ public static partial class KeyForSteamService
     private const string Base = "https://www.keyforsteam.de";
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static DateTime _last = DateTime.MinValue;
-    private static readonly TimeSpan Spacing = TimeSpan.FromSeconds(2.5);
+    private static readonly TimeSpan Spacing = TimeSpan.FromSeconds(8);   // AllKeyShop blocks fast clients
 
     public static async Task<string?> FindPageAsync(string gameName, CancellationToken ct = default)
     {
@@ -102,7 +102,7 @@ public static partial class KeyForSteamService
     private static async Task<string?> GetAsync(string url, string browserScript, CancellationToken ct)
     {
         if (DateTime.UtcNow < _downUntil)
-            throw new InvalidOperationException("KeyForSteam is not reachable right now – will retry later.");
+            throw new InvalidOperationException("KeyForSteam refuses connections from this network right now. Add a free GG.deals API key in Settings for key prices.");
         await Gate.WaitAsync(ct);
         try
         {
@@ -119,7 +119,7 @@ public static partial class KeyForSteamService
             {
                 // No connection at all: a browser wouldn't get through either.
                 _downUntil = DateTime.UtcNow.AddMinutes(15);
-                throw new InvalidOperationException("KeyForSteam is not reachable right now – will retry later.");
+                throw new InvalidOperationException("KeyForSteam refuses connections from this network right now. Add a free GG.deals API key in Settings for key prices.");
             }
 
             if (!BrowserFetcher.IsAvailable) return null;

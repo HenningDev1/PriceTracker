@@ -10,7 +10,7 @@ public sealed record DealInfo(DealKind Kind, string Badge, string Reason, double
 ///
 /// Games
 ///  • All-time low  – Steam price is discounted and at or below the lowest price ever seen
-///                    (IsThereAnyDeal history if a key is set, otherwise the history this app recorded).
+///                    (GG.deals / IsThereAnyDeal history, or ≥ 60 days of history recorded by this app).
 ///  • Big discount  – Steam discount ≥ GameDealDiscount (default 60 %).
 ///  • Cheap key     – cheapest key ≥ KeyDealPercent (default 50 %) under Steam's regular price.
 /// Items
@@ -22,6 +22,10 @@ public static class DealRules
 {
     public const int UsedBargainPercent = 35;
 
+    /// Days of own price history needed before Price Tracker trusts its *own* record as "all-time".
+    public const int OwnHistoryDays = 60;
+
+    /// Lowest Steam price ever, for display. Prefers the real history from GG.deals / IsThereAnyDeal.
     public static decimal? SteamAllTimeLow(GameEntry g)
     {
         var seen = g.History.Where(p => p.A.HasValue).Select(p => p.A!.Value).DefaultIfEmpty(decimal.MaxValue).Min();
@@ -29,8 +33,33 @@ public static class DealRules
         return low == decimal.MaxValue ? null : low;
     }
 
-    public static decimal? KeyAllTimeLow(GameEntry g) =>
-        g.History.Where(p => p.B.HasValue).Select(p => p.B!.Value).DefaultIfEmpty().Min() is var m && m > 0 ? m : null;
+    /// Is the current Steam price really the lowest ever? Only answered with real history:
+    /// an external all-time low (GG.deals / IsThereAnyDeal), or ≥ 60 days of recorded prices
+    /// where the current price beats everything before the current sale.
+    public static bool IsSteamAllTimeLow(GameEntry g)
+    {
+        if (g.SteamPrice is not { } price || g.Discount <= 0) return false;
+        if (g.SteamHistoricLow is { } ext) return price <= ext + 0.005m;
+        if (SpanDays(g.History) < OwnHistoryDays) return false;
+        var before = g.History.Where(p => p.A.HasValue && p.Time < DateTime.Now.AddDays(-14)).Select(p => p.A!.Value).ToList();
+        return before.Count > 0 && price <= before.Min() + 0.005m;
+    }
+
+    public static decimal? KeyAllTimeLow(GameEntry g)
+    {
+        var seen = g.History.Where(p => p.B.HasValue).Select(p => p.B!.Value).DefaultIfEmpty(decimal.MaxValue).Min();
+        var low = g.KeyHistoricLow.HasValue ? Math.Min(g.KeyHistoricLow.Value, seen) : seen;
+        return low == decimal.MaxValue ? null : low;
+    }
+
+    public static bool IsKeyAllTimeLow(GameEntry g)
+    {
+        if (g.KeyPrice is not { } key) return false;
+        if (g.KeyHistoricLow is { } ext) return key <= ext + 0.005m;
+        if (SpanDays(g.History) < OwnHistoryDays) return false;
+        var before = g.History.Where(p => p.B.HasValue && p.Time < DateTime.Now.AddDays(-14)).Select(p => p.B!.Value).ToList();
+        return before.Count > 0 && key <= before.Min() + 0.005m;
+    }
 
     public static List<DealInfo> ForGame(GameEntry g, AppSettings s)
     {
@@ -39,8 +68,7 @@ public static class DealRules
 
         if (g.SteamPrice is { } price && g.Discount > 0)
         {
-            var atl = SteamAllTimeLow(g);
-            if (atl.HasValue && price <= atl.Value + 0.005m)
+            if (IsSteamAllTimeLow(g))
                 deals.Add(new DealInfo(DealKind.AllTimeLow, "All-time low", $"Steam -{g.Discount}% — lowest price ever", 100 + g.Discount));
             else if (g.Discount >= s.GameDealDiscount)
                 deals.Add(new DealInfo(DealKind.BigDiscount, $"-{g.Discount}%", $"Steam sale: {g.Discount}% off", 50 + g.Discount));
@@ -52,8 +80,7 @@ public static class DealRules
             var off = (int)Math.Round((1 - key / regular.Value) * 100);
             if (off >= s.KeyDealPercent)
             {
-                var keyAtl = KeyAllTimeLow(g);
-                bool atl = keyAtl.HasValue && key <= keyAtl.Value + 0.005m && SpanDays(g.History) >= 7;
+                bool atl = IsKeyAllTimeLow(g);
                 deals.Add(new DealInfo(DealKind.CheapKey, atl ? "Key all-time low" : "Cheap key",
                     $"Key {off}% under Steam's regular price" + (g.KeyShop != null ? $" at {g.KeyShop}" : ""), 40 + off + (atl ? 20 : 0)));
             }
