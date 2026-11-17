@@ -125,34 +125,81 @@ public sealed partial class ItemHitViewModel : ObservableObject
 public sealed partial class ItemsPageViewModel : PageViewModel
 {
     public override string Title => "Wishlist";
-    public ObservableCollection<ItemViewModel> Items { get; } = new();
+    /// Loose items plus folders (and, under an open folder, its variants).
+    public ObservableCollection<object> Rows { get; } = new();
     public ObservableCollection<ItemHitViewModel> SearchResults { get; } = new();
+    public ObservableCollection<string> Folders { get; } = new();
+
+    private List<ItemViewModel> _items = new();
+    private List<FolderViewModel> _folders = new();
 
     [ObservableProperty] private string _searchText = "";
     [ObservableProperty] private bool _isSearching;
     [ObservableProperty] private bool _showResults;
-    [ObservableProperty] private ItemViewModel? _selected;
+    [ObservableProperty] private object? _selected;
     [ObservableProperty] private string _subtitle = "";
+    /// New items from the search results go into this folder (empty = no folder).
+    [ObservableProperty] private string _targetFolder = "";
 
-    public bool IsEmpty => Items.Count == 0;
+    public bool IsEmpty => _items.Count == 0;
+    public bool HasFolders => Folders.Count > 0;
 
     public ItemsPageViewModel(Tracker tracker) : base(tracker) { }
 
     public override void Reload()
     {
-        var keep = Selected?.Url;
-        Items.Clear();
-        foreach (var i in Tracker.Data.Items
-                     .Select(i => new ItemViewModel(i, Tracker))
-                     .OrderByDescending(i => i.IsDeal).ThenBy(i => i.Name))
-            Items.Add(i);
-        Selected = Items.FirstOrDefault(i => i.Url == keep) ?? Items.FirstOrDefault();
+        var keep = Key(Selected);
+        _items = Tracker.Data.Items.Select(i => new ItemViewModel(i, Tracker)).ToList();
+        _folders = _items.Where(i => i.InFolder).GroupBy(i => i.Folder!)
+            .Select(g => new FolderViewModel(g.Key, g.OrderBy(i => i.Entry.NewPrice ?? decimal.MaxValue).ToList(), Tracker, Relayout))
+            .OrderByDescending(f => f.IsDeal).ThenBy(f => f.Name).ToList();
+        Folders.Clear();
+        foreach (var f in _folders) Folders.Add(f.Name);
+        Relayout();
+        Selected = Rows.FirstOrDefault(r => Key(r) == keep)
+                   ?? (object?)_items.FirstOrDefault(i => Key(i) == keep)
+                   ?? Rows.FirstOrDefault();
         foreach (var r in SearchResults) r.Added = Tracker.Data.Items.Any(x => x.Url == r.Hit.Url);
-        var deals = Items.Count(i => i.IsDeal);
-        Subtitle = Items.Count == 0 ? "Search Geizhals and add items to track their prices"
-            : $"{Items.Count} item{(Items.Count == 1 ? "" : "s")} · prices from {Tracker.Settings.GeizhalsDomain}" + (deals > 0 ? $" · {deals} deal{(deals == 1 ? "" : "s")}" : "");
+
+        var deals = _items.Count(i => i.IsDeal);
+        Subtitle = _items.Count == 0 ? "Search Geizhals and add items to track their prices"
+            : $"{_items.Count} item{(_items.Count == 1 ? "" : "s")}" + (_folders.Count > 0 ? $" · {_folders.Count} folder{(_folders.Count == 1 ? "" : "s")}" : "")
+              + $" · prices from {Tracker.Settings.GeizhalsDomain}" + (deals > 0 ? $" · {deals} deal{(deals == 1 ? "" : "s")}" : "");
         OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasFolders));
     }
+
+    /// Rebuilds the visible rows (e.g. after opening/closing a folder) without reloading anything.
+    private void Relayout()
+    {
+        var sel = Selected;
+        Rows.Clear();
+        foreach (var f in _folders)
+        {
+            Rows.Add(f);
+            if (f.IsExpanded)
+                foreach (var m in f.Members) Rows.Add(new ItemViewModel(m.Entry, Tracker) { IsChild = true });
+        }
+        foreach (var i in _items.Where(i => !i.InFolder).OrderByDescending(i => i.IsDeal).ThenBy(i => i.Name)) Rows.Add(i);
+        foreach (var f in _folders) f.NotifyExpanded();
+        if (sel != null) Selected = Rows.FirstOrDefault(r => Key(r) == Key(sel)) ?? sel;
+    }
+
+    public void SelectRow(ItemViewModel item)
+    {
+        var folder = _folders.FirstOrDefault(f => f.Name == item.Folder);
+        if (folder is { IsExpanded: false }) folder.ToggleCommand.Execute(null);
+        Selected = Rows.FirstOrDefault(r => r is ItemViewModel i && i.Url == item.Url) ?? item;
+    }
+
+    private static string? Key(object? row) => row switch
+    {
+        ItemViewModel i => "i:" + i.Url,
+        FolderViewModel f => "f:" + f.Name,
+        _ => null,
+    };
+
+    [RelayCommand] private void UseFolder(string name) => TargetFolder = name;
 
     [RelayCommand]
     private async Task Search()
@@ -177,7 +224,7 @@ public sealed partial class ItemsPageViewModel : PageViewModel
     private async Task Add(ItemHitViewModel hit)
     {
         hit.Added = true;
-        await Tracker.AddItemAsync(hit.Hit);
+        await Tracker.AddItemAsync(hit.Hit, TargetFolder);
     }
 
     [RelayCommand] private Task Refresh() => Tracker.RefreshItemsAsync();

@@ -97,8 +97,13 @@ public static class DemoData
                  "https://gzhls.at/pix/76/f8/76f829bcabff6ab4-m.webp", 799m, 749.00m, 619.00m, "Sehr gut, refurbished", "MediaMarkt", 27),
             Item("Zotac Gaming GeForce RTX 4070 Ti SUPER Trinity Black Edition", "https://geizhals.de/zotac-gaming-geforce-rtx-4070-ti-super-trinity-black-edition-zt-d40730d-10p-a3103639.html",
                  "https://gzhls.at/pix/d4/a0/d4a0b3f56b37749b-m.webp", 899m, 879.00m, null, null, "Caseking", 12),
+            Item("GIGABYTE GeForce RTX 4070 Ti SUPER Gaming OC 16G", "https://geizhals.de/gigabyte-geforce-rtx-4070-ti-super-gaming-oc-16g-gv-n407tsgaming-oc-16gd-a3097288.html",
+                 "https://gzhls.at/pix/fd/8c/fd8c834f775cb424-m.webp", 929m, 899.00m, 789.00m, "B-Ware", "Alternate", 9),
+            Item("GIGABYTE GeForce RTX 4070 SUPER Windforce OC 12G", "https://geizhals.de/gigabyte-geforce-rtx-4070-super-windforce-oc-12g-gv-n407swf3oc-12gd-a3097423.html",
+                 "https://gzhls.at/pix/26/c7/26c778753b5d2d3c-m.webp", 649m, 599.00m, null, null, "Mindfactory", 21, newLow: true),
         });
 
+        foreach (var it in data.Items.Where(x => x.Name.Contains("RTX 4070"))) it.Folder = "RTX 4070 (Ti) SUPER";
         var settings = Storage.LoadSettings();
         settings.SteamProfile = "https://steamcommunity.com/id/example";
         Storage.SaveData(data);

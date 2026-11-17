@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PriceTracker.ViewModels"
              xmlns:c="using:PriceTracker.Controls"
+             xmlns:v="using:PriceTracker.Views"
              x:Class="PriceTracker.Views.DealsView"
              x:DataType="vm:DealsPageViewModel">
 
@@ -45,13 +46,13 @@
     </Border>
 
     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
-      <ItemsControl ItemsSource="{Binding Deals}" Margin="0,0,0,24">
+      <ItemsControl Name="DealsGrid" ItemsSource="{Binding Deals}" Margin="0,0,0,24">
         <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" ItemWidth="{Binding $parent[v:DealsView].CardWidth}" /></ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="vm:DealViewModel">
-            <Border Classes="card" Width="286" Margin="0,0,14,14" ClipToBounds="True" Padding="0">
+            <Border Classes="card" Margin="0,0,14,14" ClipToBounds="True" Padding="0">
               <Grid RowDefinitions="140,*">
                 <Panel Background="{DynamicResource ChipBg}">
                   <Image Source="{Binding Image}" Stretch="UniformToFill" IsVisible="{Binding Wide}" />

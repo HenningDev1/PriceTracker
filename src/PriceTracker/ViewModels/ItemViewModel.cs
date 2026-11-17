@@ -25,6 +25,19 @@ public sealed partial class ItemViewModel : ObservableObject
     private async Task LoadAsync() => Image = await ImageLoader.GetAsync(Entry.ImageUrl, 300);
 
     public string Url => Entry.Url;
+    public string? Folder => Entry.Folder;
+    public bool InFolder => Entry.Folder != null;
+    /// Shown indented under its open folder in the list.
+    public bool IsChild { get; init; }
+    public Avalonia.Thickness RowIndent => IsChild ? new Avalonia.Thickness(28, 0, 0, 0) : default;
+    public List<string> OtherFolders => _tracker.Folders.Where(f => f != Entry.Folder).ToList();
+    public bool HasOtherFolders => OtherFolders.Count > 0;
+
+    [ObservableProperty] private string _folderInput = "";
+
+    [RelayCommand] private void MoveToNewFolder() { if (!string.IsNullOrWhiteSpace(FolderInput)) _tracker.MoveToFolder(Entry, FolderInput); }
+    [RelayCommand] private void MoveTo(string folder) => _tracker.MoveToFolder(Entry, folder);
+    [RelayCommand] private void RemoveFromFolder() => _tracker.MoveToFolder(Entry, null);
     public string Name => Entry.Name;
     public List<DealInfo> Deals { get; }
     public bool IsDeal => Deals.Count > 0;

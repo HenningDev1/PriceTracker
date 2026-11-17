@@ -86,6 +86,7 @@ The 15 % item threshold was chosen because normal retail prices on Geizhals drif
 - **Add games manually** from a built-in Steam store search.
 - **Key prices** from KeyForSteam, with the shop and number of offers.
 - **Geizhals search & tracking** with new and used / refurbished prices.
+- **Folders** – group variants (colours, storage sizes, every board partner's GPU…) into one row that shows the cheapest price across all of them, with a combined price chart. Pick a folder while adding search results, or move items later.
 - **Price history charts** for every game and item.
 - **Automatic refresh** every 1 – 24 hours while the app is open, or on demand.
 - **Everything stays on your PC** – no account, no telemetry. Data lives in `%APPDATA%\PriceTracker`.

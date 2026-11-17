@@ -47,6 +47,8 @@ public sealed class ItemEntry
     public string Name { get; set; } = "";
     public string? ImageUrl { get; set; }
     public DateTime Added { get; set; } = DateTime.Now;
+    /// Optional folder, e.g. "MacBook Neo" holding every colour / storage variant.
+    public string? Folder { get; set; }
 
     public decimal? NewPrice { get; set; }
     public string? NewShop { get; set; }

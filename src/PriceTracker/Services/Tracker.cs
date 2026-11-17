@@ -247,15 +247,50 @@ public sealed class Tracker
 
     // ---------- items ----------
 
-    public Task AddItemAsync(GhSearchHit hit) => RunAsync(async () =>
+    public Task AddItemAsync(GhSearchHit hit, string? folder = null) => RunAsync(async () =>
     {
-        if (Data.Items.Any(x => x.Url == hit.Url)) { Status($"{hit.Name} is already on your wishlist"); return; }
-        var item = new ItemEntry { Url = hit.Url, Name = hit.Name, ImageUrl = hit.Image, NewPrice = hit.Price };
+        folder = string.IsNullOrWhiteSpace(folder) ? null : folder.Trim();
+        var existing = Data.Items.FirstOrDefault(x => x.Url == hit.Url);
+        if (existing != null)
+        {
+            if (folder != null && existing.Folder != folder) { existing.Folder = folder; Status($"Moved {hit.Name} to {folder}"); }
+            else Status($"{hit.Name} is already on your wishlist");
+            return;
+        }
+        var item = new ItemEntry { Url = hit.Url, Name = hit.Name, ImageUrl = hit.Image, NewPrice = hit.Price, Folder = folder };
         Data.Items.Add(item);
         DataChanged?.Invoke();
         await RefreshItemsCoreAsync(new[] { item });
         Status($"Tracking {item.Name}");
     });
+
+    // ---------- folders ----------
+
+    public IEnumerable<string> Folders => Data.Items.Where(i => i.Folder != null).Select(i => i.Folder!).Distinct().OrderBy(f => f);
+
+    public void MoveToFolder(ItemEntry item, string? folder)
+    {
+        item.Folder = string.IsNullOrWhiteSpace(folder) ? null : folder.Trim();
+        Save();
+        DataChanged?.Invoke();
+    }
+
+    public void RenameFolder(string from, string to)
+    {
+        to = to.Trim();
+        if (to.Length == 0 || to == from) return;
+        foreach (var i in Data.Items.Where(i => i.Folder == from)) i.Folder = to;
+        Save();
+        DataChanged?.Invoke();
+    }
+
+    /// Dissolves a folder; its items stay on the wishlist.
+    public void Ungroup(string folder)
+    {
+        foreach (var i in Data.Items.Where(i => i.Folder == folder)) i.Folder = null;
+        Save();
+        DataChanged?.Invoke();
+    }
 
     public void RemoveItem(ItemEntry i)
     {
